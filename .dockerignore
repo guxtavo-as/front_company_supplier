@@ -1,0 +1,27 @@
+# Node modules e logs
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Dependências locais
+*.local
+
+# Build output
+dist
+.vite
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Configurações de editor/IDE
+.vscode
+.idea
+*.swp
+
+# Git e cache
+.git
+.gitignore
+.gitlab-ci.yml
+.cache
