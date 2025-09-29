@@ -12,8 +12,9 @@ class Supplier extends Model {
       cpfCnpj: this.attr(''),
       email: this.attr(''),
       rg: this.attr(''),
-      dataNasceimento: this.attr(''),
-      cep: this.attr('')
+      dataNascimento: this.attr(''),
+      cep: this.attr(''),
+      companies: this.attr([])
     }
   }
 
@@ -27,8 +28,24 @@ class Supplier extends Model {
 
   static fetch(params) {
     return new Promise((resolve, reject) => {
-      Service.get({ url: `/fornecedores/${params.id}`, params, model: Supplier })
-        .then((response) => resolve(response))
+      Service.get({ url: `/fornecedores/${params.id}`, model: Supplier })
+        .then((response) => resolve(response.data))
+        .catch((error) => reject(error))
+    })
+  }
+
+  static fetchNome(params) {
+    return new Promise((resolve, reject) => {
+      Service.get({ url: `/fornecedores/nome/${params.nome}`, model: Supplier })
+        .then((response) => resolve(response.data))
+        .catch((error) => reject(error))
+    })
+  }
+
+  static fetchCpfCnpj(params) {
+    return new Promise((resolve, reject) => {
+      Service.get({ url: `/fornecedores/cpf_cnpj/${params.cpf_cnpj}`, model: Supplier })
+        .then((response) => resolve(response.data))
         .catch((error) => reject(error))
     })
   }
@@ -53,6 +70,14 @@ class Supplier extends Model {
     return new Promise((resolve, reject) => {
       Service.destroy({ url: `/fornecedores/${params.id}`, params, model: Supplier })
         .then((response) => resolve(response.data))
+        .catch((error) => reject(error))
+    })
+  }
+
+  static searchCEP(params) {
+    return new Promise((resolve, reject) => {
+      Service.getCEP({ url: `https://viacep.com.br/ws/${params.cep}/json/` })
+        .then((response) => resolve(response))
         .catch((error) => reject(error))
     })
   }

@@ -196,6 +196,10 @@ button:focus-visible {
       border: 0 !important;
     }
   }
+
+  .search-supplier {
+    width: 100%;
+  }
 }
 
 #table-companies, #table-suppliers {

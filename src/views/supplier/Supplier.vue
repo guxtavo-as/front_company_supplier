@@ -29,18 +29,25 @@
                 placeholder=" "
               )
           v-row
-            v-col(cols="6")
+            v-col(cols="4")
               v-text-field(
                 v-model="supplier.cpfCnpj"
-                label="CNPJ"
+                label="CNPJ/CPF"
                 ref="cnpj"
                 placeholder=" "
               )
-            v-col(cols="6")
-              span {{companies}}
+            v-col(cols="4")
+              v-text-field(
+                v-model="supplier.cep"
+                label="CEP"
+                ref="cep"
+                placeholder="00000000"
+                @change="getCEP(supplier.cep)"
+              )
+            v-col(cols="4" v-if="action === 'create'")
               v-select(
                 type="text"
-                v-model="supplier.empresa_id"
+                v-model="supCompany"
                 label="Empresa"
                 ref="company"
                 :items="companies"
@@ -49,13 +56,6 @@
                 placeholder=" "
               )
           v-row
-            v-col(cols="4")
-              v-text-field(
-                v-model="supplier.cep"
-                label="CEP"
-                ref="cep"
-                placeholder=" "
-              )
             v-col(cols="4")
               v-text-field(
                 v-model="supplier.rg"
@@ -73,14 +73,14 @@
           v-row(v-if="action !== 'create'")
             v-col(cols="12")
               v-textarea(
-                v-model="supplier.fornecedores"
-                label="Fornecedores"
-                ref="suppliers"
+                v-model="supplier.empresas"
+                label="Empresas"
+                ref="companies"
                 placeholder=" "
               )
       v-row
         div.btn-actions
-          v-btn.btn-inner(v-if="action === 'create'" small @click="save()") Cadastrar
+          v-btn.btn-inner(v-if="action === 'create'" small @click="save()" :disabled="disableCreate && full_fields") Cadastrar
           v-btn.btn-inner(v-else small @click="update()") Alterar
 </template>
 
@@ -95,8 +95,19 @@ export default {
       supplier: {},
       loading: false,
       companies: [],
+      copyCompanies: [],
       id: null,
-      action: ''
+      action: '',
+      regex: /^\d{8}$/,
+      regexCNPJ: /^(?:\d{11}|\d{14})$/,
+      disableCreate: true,
+      supCompany: ''
+    }
+  },
+  computed: {
+    full_fields() {
+      if (this.supplier.nome === '' || this.supplier.cpfCnpj === '' || this.supplier.cpfCnpj.length >= 11  || this.supplier.cep === '' || (this.supplier.cpfCnpj.length === 11 && this.supplier.reg === '' && this.supplier.dataNascimento === '' ) || this.supplier.email === '') return true
+      return false
     }
   },
   created() {
@@ -130,38 +141,72 @@ export default {
       Company.index({})
         .then((response) => {
           response['companies'].map((company) => {
-            this.companies.push({ "value": company.cnpj, "text": company.nomeFantasia })
+            this.copyCompanies.push({ "value": company.id, "text": company.nomeFantasia })
+            this.companies.push(company.nomeFantasia)
           })
         })
         .catch((error) => {
           console.log(error)
         })
     },
-    save() {
-      if(this.id === 0) return
-
-      Supplier.create(this.supplier)
+    getCEP(cep){
+      const valid = this.regex.test(cep)
+      if (!valid) {
+        alert('CEP precisa conter somente número!')
+      } else {
+        Supplier.searchCEP({cep: cep})
         .then((response) => {
-          this.loading = true
-          this.supplier = response['supplier']
-          this.$router.push({ path: '/fornecedores'})
+          this.disableCreate = false
+          console.log('CEP válido!')
         })
         .catch((error) => {
+          this.disableCreate = true
+          alert('O CEP digitado não foi detectado')
           console.log(error)
         })
+      }
+    },
+    save() {
+      const company = this.copyCompanies.find((item) => item.text === this.supCompany)
+      this.supplier.companies = [company.value]
+      const validCPF = this.supplier.cpfCnpj.length === 11
+      const valid = this.regexCNPJ.test(this.supplier.cpfCnpj)
+
+      if (!valid) {
+        alert('CPF/CNPJ precisa conter somente número!')
+      } else if (validCPF && this.supplier.rg === '' && this.supplier.dataNascimento === '') {
+        alert('Para CPF você precisa acrescentar RG e Data de Nascimento!')
+      } else {
+        Supplier.create(this.supplier)
+          .then((response) => {
+            this.loading = true
+            this.supplier = response['supplier']
+            this.$router.push({ path: '/fornecedores'})
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     },
     update() {
-      if(this.id !== 0) return
+      const validCPF = this.supplier.cpfCnpj.length === 11
+      const valid = this.regexCNPJ.test(this.supplier.cpfCnpj)
 
-      Supplier.update(this.supplier)
-        .then((response) => {
-          this.loading = true
-          this.supplier = response['supplier']
-          this.$router.push({ path: '/fornecedores'})
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+      if (!valid) {
+        alert('CPF/CNPJ precisa conter somente número!')
+      } else if (validCPF && this.supplier.rg === '' && this.supplier.dataNascimento === '') {
+        alert('Para CPF você precisa acrescentar RG e Data de Nascimento!')
+      } else {
+        Supplier.update(this.supplier)
+          .then((response) => {
+            this.loading = true
+            this.supplier = response['supplier']
+            this.$router.push({ path: '/fornecedores'})
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     }
   }
 }

@@ -10,7 +10,8 @@ class Company extends Model {
       id: this.attr(null),
       nomeFantasia: this.attr(''),
       cnpj: this.attr(''),
-      cep: this.attr('')
+      cep: this.attr(''),
+      suppliers: this.attr([])
     }
   }
 
@@ -50,6 +51,14 @@ class Company extends Model {
     return new Promise((resolve, reject) => {
       Service.destroy({ url: `/empresas/${params.id}`, params, model: Company })
         .then((response) => resolve(response.data))
+        .catch((error) => reject(error))
+    })
+  }
+
+  static searchCEP(params) {
+    return new Promise((resolve, reject) => {
+      Service.getCEP({ url: `https://viacep.com.br/ws/${params.cep}/json/` })
+        .then((response) => resolve(response))
         .catch((error) => reject(error))
     })
   }

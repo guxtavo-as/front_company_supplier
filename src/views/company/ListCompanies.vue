@@ -31,23 +31,18 @@
                 router-link(:to="{ name: 'Company', params: { id: item.id }}")
                   v-btn.btn-crudCS(small)
                     v-icon(small) mdi-file-edit-outline
-                v-btn.btn-crudCS(small @click="deleteCompany()")
+                v-btn.btn-crudCS(small @click="deleteCompany(item.id)")
                   v-icon(small) mdi-delete-outline
 
 </template>
 
 <script>
 import { Company } from './../../models/company.js'
-import DeleteModal from './../../components/deleteModal.vue'
 
 export default {
   name: 'ListCompanies',
-  components: {
-    DeleteModal
-  },
   data() {
     return {
-      showModal: false,
       companies: {},
       company: {},
       headers: [
@@ -60,9 +55,6 @@ export default {
     }
   },
   created(){
-    this.loadCompanies()
-  },
-  mounted() {
     this.loadCompanies()
   },
   methods: {
@@ -79,10 +71,15 @@ export default {
       return (!company || (company.id === null)) ? "Cadastrar nova empresa" : "Editar empresa" + this.company.nomeFantasia
     },
     deleteCompany(id) {
-      this.showModal = true
-    },
-    closeModal(company) {
-      console.log(company)
+      Company.delete({id: id})
+        .then((response) => {
+          alert('Empresa excluída com sucesso')
+          window.location.reload()
+        })
+        .catch((error) => {
+          alert('Falha ao escluir empresa')
+          console.log(error)
+        })
     }
   }
 }

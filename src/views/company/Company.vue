@@ -24,16 +24,17 @@
           v-row
             v-col(cols="6")
               v-text-field(
-                v-model="company.cnpj"
-                label="CNPJ"
-                ref="cnpj"
-                placeholder=" "
-              )
-            v-col(cols="6")
-              v-text-field(
                 v-model="company.cep"
                 label="CEP"
                 ref="cep"
+                placeholder="00000000"
+                @change="getCEP(company.cep)"
+              )
+            v-col(cols="6")
+              v-text-field(
+                v-model="company.cnpj"
+                label="CNPJ"
+                ref="cnpj"
                 placeholder=" "
               )
           v-row(v-if="action !== 'create'")
@@ -46,7 +47,7 @@
               )
       v-row
         div.btn-actions
-          v-btn.btn-inner(v-if="action === 'create'" small @click="save()") Cadastrar
+          v-btn.btn-inner(v-if="action === 'create'" small @click="save()" :disabled="disableCreate && full_fields") Cadastrar
           v-btn.btn-inner(v-else small @click="update()") Alterar
 </template>
 
@@ -60,7 +61,16 @@ export default {
       company: {},
       loading: false,
       id: null,
-      action: ''
+      action: '',
+      regex: /^\d{8}$/,
+      regexCNPJ: /^(?:\d{11}|\d{14})$/,
+      disableCreate: true
+    }
+  },
+  computed: {
+    full_fields() {
+      if (this.company.nomeFantasia === '' || this.company.cnpj === '' || this.company.cep === null ) return true
+      return false
     }
   },
   created() {
@@ -84,31 +94,54 @@ export default {
           console.log(error)
         })
     },
-    save() {
-      if(this.id === 0) return
-
-      Company.create(this.company)
+    getCEP(cep){
+      const valid = this.regex.test(cep)
+      if (!valid) {
+        alert('CEP precisa conter somente número!')
+      } else {
+        Company.searchCEP({cep: cep})
         .then((response) => {
-          this.loading = true
-          this.company = response['company']
-          this.$router.push({ path: '/empresas'})
+          this.disableCreate = false
+          console.log('CEP válido!')
         })
         .catch((error) => {
+          this.disableCreate = true
+          alert('O CEP digitado não foi detectado')
           console.log(error)
         })
+      }
+    },
+    save() {
+      const valid = this.regexCNPJ.test(this.company.cnpj)
+      if (!valid) {
+        alert('CPF/CNPJ precisa conter somente número!')
+      } else {
+        Company.create(this.company)
+          .then((response) => {
+            this.loading = true
+            this.company = response['company']
+            this.$router.push({ path: '/empresas'})
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     },
     update() {
-      if(this.id !== 0) return
-
-      Company.update(this.company)
-        .then((response) => {
-          this.loading = true
-          this.company = response['company']
-          this.$router.push({ path: '/empresas'})
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+      const valid = this.regexCNPJ.test(this.company.cnpj)
+      if (!valid) {
+        alert('CPF/CNPJ precisa conter somente número!')
+      } else {
+        Company.update(this.company)
+          .then((response) => {
+            this.loading = true
+            this.company = response['company']
+            this.$router.push({ path: '/empresas'})
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     }
   }
 }
