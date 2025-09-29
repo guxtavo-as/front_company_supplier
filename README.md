@@ -34,6 +34,7 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 ```
 
 Antes de Rodar o build, você precisa rodar este comando para que os dois containers estejam na mesma rede.
+Caso tenha rodado antes de dar o build da API, não precisa rodar novamente
 
 ```
     docker network create shared-net
